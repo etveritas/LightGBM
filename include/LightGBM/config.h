@@ -1,20 +1,24 @@
-/// desc and descl2 fields must be written in reStructuredText format
-
+/*!
+ * Copyright (c) 2016 Microsoft Corporation. All rights reserved.
+ * Licensed under the MIT License. See LICENSE file in the project root for license information.
+ *
+ * \note
+ * desc and descl2 fields must be written in reStructuredText format
+ */
 #ifndef LIGHTGBM_CONFIG_H_
 #define LIGHTGBM_CONFIG_H_
 
+#include <LightGBM/export.h>
+#include <LightGBM/meta.h>
 #include <LightGBM/utils/common.h>
 #include <LightGBM/utils/log.h>
 
-#include <LightGBM/meta.h>
-#include <LightGBM/export.h>
-
-#include <vector>
 #include <string>
-#include <unordered_map>
-#include <unordered_set>
 #include <algorithm>
 #include <memory>
+#include <unordered_map>
+#include <unordered_set>
+#include <vector>
 
 namespace LightGBM {
 
@@ -395,7 +399,7 @@ struct Config {
   // default = 0,0,...,0
   // desc = cost-effective gradient boosting penalty for using a feature
   // desc = applied once per forest
-  std::vector<double> cegb_penalty_feature_coupled;  
+  std::vector<double> cegb_penalty_feature_coupled;
 
   #pragma endregion
 
@@ -584,6 +588,7 @@ struct Config {
   // desc = set this to ``true`` to estimate `SHAP values <https://arxiv.org/abs/1706.06060>`__, which represent how each feature contributes to each prediction
   // desc = produces ``#features + 1`` values where the last value is the expected value of the model output over the training data
   // desc = **Note**: if you want to get more explanation for your model's predictions using SHAP values like SHAP interaction values, you can install `shap package <https://github.com/slundberg/shap>`__
+  // desc = **Note**: unlike the shap package, with ``pred_contrib`` we return a matrix with an extra column, where the last column is the expected value.
   bool predict_contrib = false;
 
   // desc = used only in ``prediction`` task
@@ -627,12 +632,14 @@ struct Config {
   // alias = unbalance, unbalanced_sets
   // desc = used only in ``binary`` application
   // desc = set this to ``true`` if training data are unbalanced
+  // desc = **Note**: while enabling this should increase the overall performance metric of your model, it will also result in poor estimates of the individual class probabilities
   // desc = **Note**: this parameter cannot be used at the same time with ``scale_pos_weight``, choose only **one** of them
   bool is_unbalance = false;
 
   // check = >0.0
   // desc = used only in ``binary`` application
   // desc = weight of labels with positive class
+  // desc = **Note**: while enabling this should increase the overall performance metric of your model, it will also result in poor estimates of the individual class probabilities
   // desc = **Note**: this parameter cannot be used at the same time with ``is_unbalance``, choose only **one** of them
   double scale_pos_weight = 1.0;
 
