@@ -290,6 +290,10 @@ class LGBMModel(_LGBMModelBase):
         self._n_classes = None
         self.set_params(**kwargs)
 
+    def _more_tags(self):
+        return {'allow_nan': True,
+                'X_types': ['2darray', 'sparse', '1dlabels']}
+
     def get_params(self, deep=True):
         """Get parameters for this estimator.
 
@@ -596,7 +600,7 @@ class LGBMModel(_LGBMModelBase):
         predicted_result : array-like of shape = [n_samples] or shape = [n_samples, n_classes]
             The predicted values.
         X_leaves : array-like of shape = [n_samples, n_trees] or shape = [n_samples, n_trees * n_classes]
-            If ``pred_leaf=True``, the predicted leaf every tree for each sample.
+            If ``pred_leaf=True``, the predicted leaf of every tree for each sample.
         X_SHAP_values : array-like of shape = [n_samples, n_features + 1] or shape = [n_samples, (n_features + 1) * n_classes]
             If ``pred_contrib=True``, the feature contributions for each sample.
         """

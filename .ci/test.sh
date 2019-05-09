@@ -1,8 +1,8 @@
 #!/bin/bash
 
 if [[ $OS_NAME == "macos" ]] && [[ $COMPILER == "gcc" ]]; then
-    export CXX=g++-8
-    export CC=gcc-8
+    export CXX=g++-9
+    export CC=gcc-9
 elif [[ $OS_NAME == "linux" ]] && [[ $COMPILER == "clang" ]]; then
     export CXX=clang++
     export CC=clang
@@ -18,22 +18,33 @@ else
     CMAKE_OPTS=()
 fi
 
+if [[ $AZURE == "true" ]] && [[ $OS_NAME == "linux" ]] && [[ $TASK == "swig" ]]; then
+    mkdir $BUILD_DIRECTORY/build && cd $BUILD_DIRECTORY/build
+    cmake -DUSE_SWIG=ON "${CMAKE_OPTS[@]}" ..
+    make -j4 || exit -1
+    if [[ $COMPILER == "gcc" ]]; then
+        objdump -T $BUILD_DIRECTORY/lib_lightgbm.so > $BUILD_DIRECTORY/objdump.log || exit -1
+        objdump -T $BUILD_DIRECTORY/lib_lightgbm_swig.so >> $BUILD_DIRECTORY/objdump.log || exit -1
+        python $BUILD_DIRECTORY/helpers/check_dynamic_dependencies.py $BUILD_DIRECTORY/objdump.log || exit -1
+    fi
+    cp $BUILD_DIRECTORY/build/lightgbmlib.jar $BUILD_ARTIFACTSTAGINGDIRECTORY/lightgbmlib.jar
+    exit 0
+fi
+
 conda create -q -y -n $CONDA_ENV python=$PYTHON_VERSION
 source activate $CONDA_ENV
 
 cd $BUILD_DIRECTORY
 
 if [[ $TRAVIS == "true" ]] && [[ $TASK == "check-docs" ]]; then
-    if [[ $PYTHON_VERSION == "2.7" ]]; then
-        conda -q -y -n $CONDA_ENV mock
-    fi
-    conda install -q -y -n $CONDA_ENV sphinx "sphinx_rtd_theme>=0.3"
-    pip install --user rstcheck
+    cd $BUILD_DIRECTORY/docs
+    conda install -q -y -n $CONDA_ENV -c conda-forge doxygen
+    pip install --user -r requirements.txt rstcheck
     # check reStructuredText formatting
     cd $BUILD_DIRECTORY/python-package
     rstcheck --report warning `find . -type f -name "*.rst"` || exit -1
     cd $BUILD_DIRECTORY/docs
-    rstcheck --report warning --ignore-directives=autoclass,autofunction `find . -type f -name "*.rst"` || exit -1
+    rstcheck --report warning --ignore-directives=autoclass,autofunction,doxygenfile `find . -type f -name "*.rst"` || exit -1
     # build docs and check them for broken links
     make html || exit -1
     find ./_build/html/ -type f -name '*.html' -exec \
@@ -68,7 +79,7 @@ if [[ $TASK == "if-else" ]]; then
     exit 0
 fi
 
-conda install -q -y -n $CONDA_ENV matplotlib nose numpy pandas psutil pytest python-graphviz scikit-learn scipy
+conda install -q -y -n $CONDA_ENV matplotlib numpy pandas psutil pytest python-graphviz scikit-learn scipy
 
 if [[ $OS_NAME == "macos" ]] && [[ $COMPILER == "clang" ]]; then
     sudo ln -sf `ls -d "$(brew --cellar libomp)"/*/lib`/* $CONDA_PREFIX/lib || exit -1  # fix "OMP: Error #15: Initializing libiomp5.dylib, but found libomp.dylib already initialized." (OpenMP library conflict due to conda's MKL)

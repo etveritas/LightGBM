@@ -11,6 +11,9 @@ if [[ $OS_NAME == "macos" ]]; then
 #            rm '/usr/local/include/c++'  # previous variant to deal with conflict link
 #            brew cask uninstall oclint  #  reserve variant to deal with conflict link
             brew link --overwrite gcc
+            brew upgrade gcc
+        else
+            brew update
         fi
         if [[ $TASK != "mpi" ]]; then
             brew install gcc
@@ -34,7 +37,7 @@ else  # Linux
         sudo apt-get update
         sudo apt-get install --no-install-recommends -y libboost1.68-dev ocl-icd-opencl-dev
         cd $BUILD_DIRECTORY  # to avoid permission errors
-        wget -q https://github.com/Microsoft/LightGBM/releases/download/v2.0.12/AMD-APP-SDKInstaller-v3.0.130.136-GA-linux64.tar.bz2
+        wget -q https://github.com/microsoft/LightGBM/releases/download/v2.0.12/AMD-APP-SDKInstaller-v3.0.130.136-GA-linux64.tar.bz2
         tar -xjf AMD-APP-SDK*.tar.bz2
         mkdir -p $OPENCL_VENDOR_PATH
         mkdir -p $AMDAPPSDK_PATH
